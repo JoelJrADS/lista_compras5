@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'lista_helper.dart';
 
 class ConsultarListaPage extends StatefulWidget {
   @override
@@ -75,13 +76,32 @@ class DetalhesListaPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Aqui você pode implementar a lógica para exibir os detalhes da lista selecionada
     return Scaffold(
       appBar: AppBar(
         title: Text('Detalhes da Lista'),
       ),
-      body: Center(
-        child: Text('Detalhes da $nomeLista'),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: ListaHelper.recuperarListaLocalmente(nomeLista),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Erro ao carregar os dados da lista'));
+          } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+            List<Map<String, dynamic>> itensLista = snapshot.data!;
+            return ListView.builder(
+              itemCount: itensLista.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(itensLista[index]['nome']),
+                  subtitle: Text('Quantidade: ${itensLista[index]['quantidade']}'),
+                );
+              },
+            );
+          } else {
+            return Center(child: Text('Nenhum item na lista'));
+          }
+        },
       ),
     );
   }
